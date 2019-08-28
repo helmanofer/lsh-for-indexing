@@ -19,3 +19,9 @@ This package helps search engines to index and easily search on vector using Loc
 if you know your collection size and you want an optimal number of bucket_size
     
     rp.fit(sample_size=2000)
+    
+transforming a bulk of vectors
+
+    mat = np.asarray([[1,0,1,1,0,0], [1,0,0,1,0,1]])
+    rp.indexable_transform(mat)
+    >> [['0_010', '1_111'], ['0_010', '1_101']]

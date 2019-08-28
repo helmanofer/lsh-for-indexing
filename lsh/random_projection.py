@@ -19,7 +19,7 @@ class LshRandomProjection(object):
         self.num_of_buckets = num_of_buckets
         self.seed = seed
         if seed is None:
-            self.seed = random.randint()
+            self.seed = random.randint(0, 1000)
         self.projection = None
 
     def fit(self, n_samples=None):
@@ -27,7 +27,7 @@ class LshRandomProjection(object):
             assert "Please provide either n_samples or num_of_buckets"
         if n_samples:
             n_components = self.auto_lsh_num_of_components(n_samples)
-            self.num_of_buckets = n_components/self.bucket_size
+            self.num_of_buckets = int(n_components/self.bucket_size)
         else:
             n_components = self.bucket_size * self.num_of_buckets
         density = 1 / np.sqrt(self.vector_dimension)

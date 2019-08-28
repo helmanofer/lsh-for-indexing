@@ -9,7 +9,6 @@ This package helps search engines to index and easily search on vector using Loc
     from lsh.random_projection import LshRandomProjection
     import numpy as np
     
-    my_vectors_dimentions = 6
     rp = LshRandomProjection(vector_dimension=6, bucket_size=3, num_of_buckets=2)    import numpy as np
     vec = np.asarray([1,0,1,1,0,0])
     rp.fit()

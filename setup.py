@@ -6,6 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="lsh-for-indexing",
     author="Ofer Helman",
+    version="0.0.5",
     author_email="helmanofer@gmail.com",
     description="Package for indexing vectors to solr/es",
     long_description=long_description,

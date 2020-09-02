@@ -5,7 +5,6 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="lsh-for-indexing",
-    version="0.0.4",
     author="Ofer Helman",
     author_email="helmanofer@gmail.com",
     description="Package for indexing vectors to solr/es",
@@ -13,6 +12,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/helmanofer/lsh-for-indexing",
     packages=setuptools.find_packages(),
+    install_requires=["numpy", "scipy", "scikit-learn"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

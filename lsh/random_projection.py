@@ -1,16 +1,19 @@
+from abc import abstractmethod
 import random
 from itertools import zip_longest
 
 import numpy as np
-from scipy import sparse
 from sklearn.random_projection import johnson_lindenstrauss_min_dim
+from sklearn import random_projection
 
 
 class LshRandomProjection(object):
-    def __init__(self, vector_dimension, bucket_size=3, num_of_buckets=None, seed=None):
+    def __init__(self, vector_dimension, bucket_size=3, num_of_buckets=None,
+                 seed=None):
         """
         :param vector_dimension: int
-        :param bucket_size: int - the larger the less accurate but easier on the lucene index
+        :param bucket_size: int - the larger the less accurate but easier on
+                                  the lucene index
         :param num_of_buckets: auto or int
         :param seed: int
         """
@@ -30,26 +33,31 @@ class LshRandomProjection(object):
             self.num_of_buckets = int(n_components/self.bucket_size)
         else:
             n_components = self.bucket_size * self.num_of_buckets
-        density = 1 / np.sqrt(self.vector_dimension)
-        self.projection = sparse.random(n_components, self.vector_dimension, density=density,
-                                        data_rvs=np.random.randn, random_state=self.seed)
+
+        self._fit(n_components)
+
+    @abstractmethod
+    def _fit(self, n_components):
+        raise NotImplementedError
 
     @staticmethod
     def auto_lsh_num_of_components(n_samples, eps=0.1):
         return johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps)
 
     @staticmethod
-    def grouper(iterable, n, fillvalue=None):
+    def _grouper(iterable, n, fillvalue=None):
         """Collect data into fixed-length chunks or blocks"""
         # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
         args = [iter(iterable)] * n
         return zip_longest(*args, fillvalue=fillvalue)
 
+    @abstractmethod
     def transform(self, X):
-        return X * self.projection.T
+        raise NotImplementedError
 
     def _stringify(self, x):
-        g = self.grouper("".join((x > 0).astype(int).astype(str)), self.bucket_size, '0')
+        g = self._grouper("".join((x > 0).astype(int).astype(str)),
+                          self.bucket_size, '0')
         return ["%s_%s" % (ix, "".join(a)) for ix, a in enumerate(g)]
 
     def indexable(self, X):
@@ -64,6 +72,36 @@ class LshRandomProjection(object):
         X_new = self.transform(X)
         return self.indexable(X_new)
 
-    # def save_model(self):
+
+class LshSparseRandomProjection(LshRandomProjection):
+    def __init__(self, vector_dimension, bucket_size=3, num_of_buckets=None,
+                 seed=None) -> None:
+        LshRandomProjection.__init__(self, vector_dimension, bucket_size,
+                                     num_of_buckets, seed)
+        self.transformer_cls = random_projection.SparseRandomProjection
+        self.transformer: random_projection.SparseRandomProjection
+
+    def _fit(self, n_components):
+        X = np.random.random((10, self.vector_dimension))
+        self.transformer = self.transformer_cls(n_components,
+                                                random_state=self.seed)
+        self.transformer.fit(X)
+
+    def transform(self, X):
+        vector = False
+        if X.ndim == 1:
+            vector = True
+            X = X.reshape(1, -1)
+        tr = self.transformer.transform(X)
+        if vector:
+            return tr[0]
+        return tr
 
 
+class LshGaussianRandomProjection(LshSparseRandomProjection):
+    def __init__(self, vector_dimension, bucket_size=3, num_of_buckets=None,
+                 seed=None) -> None:
+        LshRandomProjection.__init__(self, vector_dimension, bucket_size,
+                                     num_of_buckets, seed)
+        self.transformer_cls = random_projection.GaussianRandomProjection
+        self.transformer: random_projection.GaussianRandomProjection
